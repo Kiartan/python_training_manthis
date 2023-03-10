@@ -1,5 +1,3 @@
-from selenium import webdriver
-from fixture.session import SessionHelper
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from model.project import Project
@@ -12,12 +10,16 @@ class ProjectHelper:
     def open_add_project_page(self):
         wd = self.wd
         if not wd.current_url.endswith("/manage_proj_create_page.php"):
+            wd.find_element(By.LINK_TEXT, "Manage").click()
+            wd.find_element(By.LINK_TEXT, "Manage Projects").click()
             wd.find_element(By.LINK_TEXT, "Create New Project").click()
 
     def open_projects_page(self):
         wd = self.wd
         if not wd.current_url.endswith("/manage_proj_page.php"):
-            wd.find_element(By.XPATH, "//a[@href='/mantisbt-1.2.20/manage_proj_page.php']").click()
+            wd.find_element(By.LINK_TEXT, "Manage").click()
+            wd.find_element(By.LINK_TEXT, "Manage Projects").click()
+            #wd.find_element(By.XPATH, "//a[@href='/mantisbt-1.2.20/manage_proj_page.php']").click()
 
     def create(self, project):
         wd = self.app.wd
@@ -53,9 +55,19 @@ class ProjectHelper:
             wd = self.app.wd
             self.open_projects_page()
             self.project_cache = []
-            for element in wd.find_elements(By.CSS_SELECTOR, "span.group"):
-                text = element.text
-                id = element.find_element(By.NAME, "selected[]").get_attribute("value")
-                self.project_cache.append(Project(name=text, id=id))
+            #for element in wd.find_elements(By.CSS_SELECTOR, "span.group"):
+                #text = element.text
+                #id = element.find_element(By.NAME, "selected[]").get_attribute("value")
+                #self.project_cache.append(Project(name=text, id=id))
+            for element in wd.find_elements(By.CLASS_NAME, "row-%s" % 1 or 2):
+                cells = element.find_elements(By.TAG_NAME, "td")
+                id = cells[0].find_element(By.XPATH, "//a[contains(@href,'manage_proj_edit_page.php?project_id']").get_attribute("href")
+                project_id = id[-1]
+                name = cells[0].text
+                status = cells[1].text
+                #enabled = cells[2].text
+                view_state = cells[3].text
+                description = cells[4].text
+                self.project_cache.append(Project(id=project_id, name=name, status=status, view_state=view_state,
+                                                  description=description))
         return list(self.project_cache)
-
